@@ -1,10 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { classifications } from '../data/classifications.js';
 import './DispatchModal.css';
+import L from 'leaflet'; // We need leaflet to calculate distances
 
-export default function DispatchModal({ incident, availableUnits, onDispatch, onClose }) {
+// It now accepts 'onGoToLocation' as a prop
+export default function DispatchModal({ incident, availableUnits, onDispatch, onClose, onGoToLocation }) {
   const [selectedClassification, setSelectedClassification] = useState('');
   const [selectedUnitIds, setSelectedUnitIds] = useState([]);
+  // --- NEW STATE: To store the ID of the closest unit ---
+  const [nearestUnitId, setNearestUnitId] = useState(null);
+
+  // --- NEW LOGIC: Calculate the nearest unit when the modal opens ---
+  useEffect(() => {
+    if (incident && availableUnits.length > 0) {
+      let closestUnit = null;
+      let minDistance = Infinity;
+      const incidentLatLng = L.latLng(incident.location.lat, incident.location.lng);
+
+      availableUnits.forEach(unit => {
+        const unitLatLng = L.latLng(unit.lat, unit.lng);
+        const distance = incidentLatLng.distanceTo(unitLatLng);
+        
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestUnit = unit;
+        }
+      });
+
+      if (closestUnit) {
+        setNearestUnitId(closestUnit.id);
+      }
+    }
+  }, [incident, availableUnits]);
 
   const handleUnitSelection = (unitId) => {
     setSelectedUnitIds(prev =>
@@ -27,7 +54,13 @@ export default function DispatchModal({ incident, availableUnits, onDispatch, on
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <h2>Dispatch to Incident #{`${incident.id}`.slice(-4)}</h2>
+        {/* --- NEW HEADER STRUCTURE WITH BUTTON --- */}
+        <div className="modal-header">
+          <h2>Dispatch to Incident #{`${incident.id}`.slice(-4)}</h2>
+          <button className="btn-goto" onClick={() => onGoToLocation(incident.location)}>
+            Go to Location
+          </button>
+        </div>
         <p>Location: {incident.location.lat.toFixed(4)}, {incident.location.lng.toFixed(4)}</p>
         
         <div className="call-description-box">
@@ -55,6 +88,12 @@ export default function DispatchModal({ incident, availableUnits, onDispatch, on
 
           <div className="form-group">
             <label>Available Units:</label>
+            {/* --- NEW UI ELEMENT: The suggestion box --- */}
+            {nearestUnitId && (
+              <div className="suggestion-box">
+                Suggested Unit (Nearest): <strong>{nearestUnitId}</strong>
+              </div>
+            )}
             <div className="unit-selection-list">
               {availableUnits.map(unit => (
                 <label key={unit.id} className="unit-checkbox">

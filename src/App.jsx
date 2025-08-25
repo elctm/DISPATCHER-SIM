@@ -44,6 +44,8 @@ export default function App() {
   const [units, setUnits] = useState(enrichedUnits);
   const [incidents, setIncidents] = useState([]);
   const [selectedIncidentId, setSelectedIncidentId] = useState(null);
+  // --- NEW STATE to hold the map instance ---
+  const [mapInstance, setMapInstance] = useState(null);
 
   const initiateUnitMovement = (unit, incident) => {
     if (movementIntervals[unit.id]) { clearInterval(movementIntervals[unit.id]); }
@@ -66,10 +68,8 @@ export default function App() {
       movementIntervals[unit.id] = setInterval(() => {
         if (currentStep >= smoothPath.length) {
           clearInterval(movementIntervals[unit.id]);
-
           setUnits(prev => prev.map(u => u.id === unit.id ? { ...u, status: "On Scene", lat: endPos.lat, lng: endPos.lng } : u));
           setIncidents(prev => prev.map(i => i.id === incident.id ? { ...i, status: "On Scene" } : i));
-
           setTimeout(() => {
             setIncidents(prev => prev.filter(i => i.id !== incident.id));
             const homeStation = stations.find(s => s.id === unit.station);
@@ -83,10 +83,8 @@ export default function App() {
               );
             }
           }, 20000);
-
           return;
         }
-
         const nextPos = smoothPath[currentStep];
         setUnits(prev => prev.map(u => u.id === unit.id ? { ...u, lat: nextPos.lat, lng: nextPos.lng } : u));
         currentStep++;
@@ -125,22 +123,24 @@ export default function App() {
     }
   };
 
+  // --- NEW FUNCTION to control the map's view ---
+  const handleGoToLocation = (location) => {
+    if (mapInstance && location) {
+      mapInstance.flyTo([location.lat, location.lng], 16);
+    }
+  };
+
   const selectedIncident = incidents.find(inc => inc.id === selectedIncidentId);
 
-  // --- THIS IS THE UPDATED INCIDENT GENERATION LOGIC ---
   useEffect(() => {
+    let initialTimerId;
     let incidentTimer;
 
-    // This function will generate an incident and then schedule the next one
     const incidentLoop = async () => {
       await generateNewIncident();
-
-      // --- Tweak these values to control the timing ---
-      const minDelay = 20000; // 20 seconds
-      const maxDelay = 90000; // 90 seconds (1.5 minutes)
+      const minDelay = 20000;
+      const maxDelay = 90000;
       const randomDelay = Math.random() * (maxDelay - minDelay) + minDelay;
-
-      // Schedule the next call
       incidentTimer = setTimeout(incidentLoop, randomDelay);
     };
 
@@ -149,21 +149,15 @@ export default function App() {
         const randomStation = stations[Math.floor(Math.random() * stations.length)];
         const randomLatOffset = (Math.random() - 0.5) * 0.02;
         const randomLngOffset = (Math.random() - 0.5) * 0.02;
-        const incidentLocation = {
-          lat: randomStation.coords[0] + randomLatOffset,
-          lng: randomStation.coords[1] + randomLngOffset
-        };
-
+        const incidentLocation = { lat: randomStation.coords[0] + randomLatOffset, lng: randomStation.coords[1] + randomLngOffset };
         const response = await fetch('http://localhost:3001/api/generate-description', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(incidentLocation),
         });
-
         if (!response.ok) { throw new Error(`Network response was not ok (status: ${response.status})`); }
         const data = await response.json();
         const aiDescription = data.description;
-
         if (aiDescription) {
           const newIncident = {
             id: Date.now(),
@@ -179,12 +173,12 @@ export default function App() {
         console.error("Failed to fetch new incident description:", error);
       }
     };
-
-    // Start the loop
-    incidentLoop();
-
-    // Cleanup function to clear the timer when the component unmounts
-    return () => clearTimeout(incidentTimer);
+    
+    initialTimerId = setTimeout(incidentLoop, 2000);
+    return () => {
+      clearTimeout(initialTimerId);
+      clearTimeout(incidentTimer);
+    };
   }, []);
 
   return (
@@ -195,7 +189,12 @@ export default function App() {
         onSelectIncident={setSelectedIncidentId}
       />
       <div className="map-container">
-        <Map units={units} stations={stations} incidents={incidents} />
+        <Map
+          units={units}
+          stations={stations}
+          incidents={incidents}
+          setMapInstance={setMapInstance}
+        />
       </div>
 
       {selectedIncident && (
@@ -204,6 +203,7 @@ export default function App() {
           availableUnits={units.filter(u => u.status === 'Available')}
           onDispatch={handleDispatchSubmit}
           onClose={() => setSelectedIncidentId(null)}
+          onGoToLocation={handleGoToLocation}
         />
       )}
     </div>

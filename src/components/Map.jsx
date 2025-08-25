@@ -1,7 +1,5 @@
-// src/components/Map.jsx
-
-import React from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import React, { useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -11,12 +9,9 @@ const engineIcon = new L.Icon({
   iconAnchor: [17, 35],
   popupAnchor: [0, -35]
 });
-
-// For the quick fix, we can create placeholder icons that just reuse the engine icon.
 const rescueIcon = engineIcon;
 const ladderIcon = engineIcon;
 
-// This helper function will now work for all types
 const getUnitIcon = (unitType) => {
   switch (unitType) {
     case 'Engine':
@@ -30,7 +25,19 @@ const getUnitIcon = (unitType) => {
   }
 };
 
-export default function Map({ units, stations, incidents }) {
+// --- NEW HELPER COMPONENT to get control of the map ---
+function MapController({ setMapInstance }) {
+  const map = useMap();
+  useEffect(() => {
+    if (map) {
+      setMapInstance(map);
+    }
+  }, [map, setMapInstance]);
+  return null;
+}
+
+// The component now accepts 'setMapInstance' as a prop
+export default function Map({ units, stations, incidents, setMapInstance }) {
   const mapCenter = [-33.447, -70.603];
 
   return (
@@ -40,14 +47,11 @@ export default function Map({ units, stations, incidents }) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
       
-      {/* Station Markers */}
       {stations.map(station => (
         <Marker key={`station-${station.id}`} position={station.coords}>
           <Popup>Station: {station.id}</Popup>
         </Marker>
       ))}
-
-      {/* Unit Markers with Custom Icons */}
       {units.map(unit => (
         <Marker 
           key={`unit-${unit.id}`} 
@@ -57,18 +61,18 @@ export default function Map({ units, stations, incidents }) {
           <Popup>Unit: {unit.id} - Status: {unit.status}</Popup>
         </Marker>
       ))}
-
-      {/* Incident Markers */}
       {incidents.map(incident => (
         incident.location && (
           <Marker
             key={`incident-${incident.id}`}
             position={[incident.location.lat, incident.location.lng]}
           >
-            <Popup>Incident: {incident.type} - Status: {incident.status}</Popup>
+            <Popup>Incident: {incident.type || 'Unclassified'} - Status: {incident.status}</Popup>
           </Marker>
         )
       ))}
+      {/* This new component gives App.jsx control over the map */}
+      <MapController setMapInstance={setMapInstance} />
     </MapContainer>
   );
 }
