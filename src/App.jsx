@@ -9,7 +9,7 @@ import "./App.css";
 import L from "leaflet";
 import "leaflet-routing-machine";
 
-const stationUnitCounter = {}; 
+const stationUnitCounter = {};
 const offsetAmount = 0.00018;
 const enrichedUnits = initialUnits.map(unit => {
   const station = stations.find(s => s.id === unit.station);
@@ -47,7 +47,7 @@ export default function App() {
 
   const initiateUnitMovement = (unit, incident) => {
     if (movementIntervals[unit.id]) { clearInterval(movementIntervals[unit.id]); }
-    
+
     const startPos = L.latLng(unit.lat, unit.lng);
     const endPos = L.latLng(incident.location.lat, incident.location.lng);
     const routingControl = L.Routing.control({
@@ -61,23 +61,23 @@ export default function App() {
       const smoothPath = createSmoothPath(route.coordinates, 20);
       const durationMilliseconds = (route.summary.totalDistance / (60 * 1000 / 3600)) * 1000;
       const delay = Math.max(16, durationMilliseconds / smoothPath.length);
-      
+
       let currentStep = 0;
       movementIntervals[unit.id] = setInterval(() => {
         if (currentStep >= smoothPath.length) {
           clearInterval(movementIntervals[unit.id]);
-          
+
           setUnits(prev => prev.map(u => u.id === unit.id ? { ...u, status: "On Scene", lat: endPos.lat, lng: endPos.lng } : u));
           setIncidents(prev => prev.map(i => i.id === incident.id ? { ...i, status: "On Scene" } : i));
-          
+
           setTimeout(() => {
             setIncidents(prev => prev.filter(i => i.id !== incident.id));
             const homeStation = stations.find(s => s.id === unit.station);
             if (homeStation) {
-              setUnits(prev => 
-                prev.map(u => 
-                  u.id === unit.id 
-                    ? { ...u, status: "Available", lat: homeStation.coords[0], lng: homeStation.coords[1] } 
+              setUnits(prev =>
+                prev.map(u =>
+                  u.id === unit.id
+                    ? { ...u, status: "Available", lat: homeStation.coords[0], lng: homeStation.coords[1] }
                     : u
                 )
               );
@@ -86,7 +86,7 @@ export default function App() {
 
           return;
         }
-        
+
         const nextPos = smoothPath[currentStep];
         setUnits(prev => prev.map(u => u.id === unit.id ? { ...u, lat: nextPos.lat, lng: nextPos.lng } : u));
         currentStep++;
@@ -99,17 +99,17 @@ export default function App() {
     const targetIncident = incidents.find(inc => inc.id === incidentId);
     if (!targetIncident) return;
 
-    setIncidents(prev => 
-      prev.map(inc => 
+    setIncidents(prev =>
+      prev.map(inc =>
         inc.id === incidentId ? { ...inc, type: classification, status: "Dispatched" } : inc
       )
     );
-    
+
     for (const unitId of selectedUnitIds) {
       const unitToDispatch = units.find(u => u.id === unitId);
       if (unitToDispatch) {
-        setUnits(prev => 
-          prev.map(u => 
+        setUnits(prev =>
+          prev.map(u =>
             u.id === unitId ? { ...u, status: "En Route" } : u
           )
         );
@@ -119,26 +119,28 @@ export default function App() {
         if (unitStation && unitStation.tone) {
           await playSound(unitStation.tone);
         }
-        
-        await new Promise(resolve => setTimeout(resolve, 500)); 
+
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
   };
-  
+
   const selectedIncident = incidents.find(inc => inc.id === selectedIncidentId);
 
-  // --- THIS IS THE MODIFIED INCIDENT GENERATION LOGIC ---
+  // --- THIS IS THE UPDATED INCIDENT GENERATION LOGIC ---
   useEffect(() => {
-    let initialTimerId;
     let incidentTimer;
 
+    // This function will generate an incident and then schedule the next one
     const incidentLoop = async () => {
       await generateNewIncident();
 
-      const minDelay = 20000;
-      const maxDelay = 90000;
+      // --- Tweak these values to control the timing ---
+      const minDelay = 20000; // 20 seconds
+      const maxDelay = 90000; // 90 seconds (1.5 minutes)
       const randomDelay = Math.random() * (maxDelay - minDelay) + minDelay;
 
+      // Schedule the next call
       incidentTimer = setTimeout(incidentLoop, randomDelay);
     };
 
@@ -177,15 +179,12 @@ export default function App() {
         console.error("Failed to fetch new incident description:", error);
       }
     };
-    
-    // Start the first incident generation after a 2-second delay
-    initialTimerId = setTimeout(incidentLoop, 2000);
 
-    // The cleanup function now clears both potential timers
-    return () => {
-      clearTimeout(initialTimerId);
-      clearTimeout(incidentTimer);
-    };
+    // Start the loop
+    incidentLoop();
+
+    // Cleanup function to clear the timer when the component unmounts
+    return () => clearTimeout(incidentTimer);
   }, []);
 
   return (
