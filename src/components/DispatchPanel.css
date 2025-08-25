@@ -1,0 +1,92 @@
+/* src/components/DispatchPanel.css */
+.dispatch-panel {
+  width: 350px;
+  background-color: #111827;
+  color: #d1d5db;
+  display: flex;
+  flex-direction: column; /* This allows the sections inside to be laid out vertically */
+  box-shadow: 3px 0px 15px rgba(0,0,0,0.4);
+  z-index: 1000;
+  border-right: 1px solid #374151;
+  overflow: hidden; /* Hide overflow at the main panel level */
+}
+
+.panel-section {
+  padding: 15px;
+}
+
+.panel-section:first-child {
+  padding-bottom: 0;
+}
+
+/* This makes the incident list the part that scrolls */
+.panel-section:last-child {
+  flex: 1; /* Grow to fill remaining space */
+  overflow-y: auto; /* CRITICAL: Adds a scrollbar when the content is too tall */
+  padding-top: 15px;
+}
+
+
+.panel-section h2 {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #9ca3af;
+  border-bottom: 1px solid #374151;
+  padding-bottom: 8px;
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+.unit-card, .incident-card.as-button {
+  background-color: #1f2937;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  border: 1px solid #374151;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.incident-card.as-button:hover {
+  background-color: #374151;
+  border-color: #4f5a6b;
+}
+
+.unit-id { 
+  font-weight: bold;
+  font-family: 'Roboto Mono', monospace;
+}
+.status-En-Route { color: #facc15; }
+.status-On-Scene { color: #ef4444; }
+.status-Available { color: #4ade80; }
+
+.incident-info {
+  display: flex;
+  flex-direction: column;
+}
+.incident-type {
+  font-weight: 500;
+  color: #f9fafb;
+}
+.incident-status {
+  font-size: 12px;
+  color: #9ca3af;
+}
+.no-incidents {
+  color: #6b7280;
+  text-align: center;
+  margin-top: 20px;
+  font-style: italic;
+}
+
+.incident-card.as-button {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: #d1d5db;
+}

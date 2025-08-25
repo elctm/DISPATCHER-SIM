@@ -1,0 +1,15 @@
+/* src/App.css */
+
+.app-container {
+  display: flex;
+  flex-direction: row; /* Changed back to a side-by-side layout */
+  width: 100vw;
+  height: 100vh;
+  background-color: #1f2937;
+}
+
+.map-container {
+  flex: 1; /* This makes the map grow to fill the available space */
+  height: 100%;
+  width: 100%;
+}

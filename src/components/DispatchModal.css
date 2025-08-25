@@ -1,0 +1,117 @@
+/* src/components/DispatchModal.css */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+.modal-content {
+  background-color: #34495e;
+  color: #ecf0f1;
+  padding: 20px 30px;
+  border-radius: 8px;
+  width: 500px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+.modal-content h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #7f8c8d;
+  padding-bottom: 10px;
+}
+.form-group {
+  margin-bottom: 20px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+select, input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #7f8c8d;
+  background-color: #2c3e50;
+  color: white;
+}
+.unit-selection-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #7f8c8d;
+  padding: 10px;
+  border-radius: 4px;
+}
+.unit-checkbox {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+.unit-checkbox input {
+  width: auto;
+  margin-right: 10px;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+.modal-actions button {
+  padding: 10px 20px;
+}
+.btn-cancel {
+  background-color: #7f8c8d;
+}
+.btn-dispatch {
+  background-color: #c0392b;
+}
+.btn-dispatch:hover {
+  background-color: #e74c3c;
+}
+
+/* --- STYLES FOR THE NEW DESCRIPTION BOX --- */
+.call-description-box {
+  background-color: rgba(0,0,0,0.2);
+  border-left: 4px solid #e67e22;
+  padding: 10px 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+}
+.call-description-title {
+  margin: 0 0 5px 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #bdc3c7;
+}
+.call-description-text {
+  margin: 0;
+  font-style: italic;
+  font-size: 15px;
+}
+/* Add these styles to the bottom of your DispatchModal.css file */
+.call-description-box {
+  background-color: rgba(0,0,0,0.2);
+  border-left: 4px solid #e67e22;
+  padding: 10px 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+}
+.call-description-title {
+  margin: 0 0 5px 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #bdc3c7;
+}
+.call-description-text {
+  margin: 0;
+  font-style: italic;
+  font-size: 15px;
+}
