@@ -4,11 +4,11 @@ import './DispatchModal.css';
 import L from 'leaflet'; // We need leaflet to calculate distances
 
 // It now accepts 'onGoToLocation' as a prop
-export default function DispatchModal({ incident, availableUnits, onDispatch, onClose, onGoToLocation }) {
-  const [selectedClassification, setSelectedClassification] = useState('');
-  const [selectedUnitIds, setSelectedUnitIds] = useState([]);
-  // --- NEW STATE: To store the ID of the closest unit ---
+export default function DispatchModal({ incident, availableUnits, recommendedUnitIds = [], onDispatch, onClose, onGoToLocation }) {
+  const [selectedClassification, setSelectedClassification] = useState(incident.type || '');
+  const [selectedUnitIds, setSelectedUnitIds] = useState(recommendedUnitIds);
   const [nearestUnitId, setNearestUnitId] = useState(null);
+  const [preaviso, setPreaviso] = useState('');
 
   // --- NEW LOGIC: Calculate the nearest unit when the modal opens ---
   useEffect(() => {
@@ -20,7 +20,6 @@ export default function DispatchModal({ incident, availableUnits, onDispatch, on
       availableUnits.forEach(unit => {
         const unitLatLng = L.latLng(unit.lat, unit.lng);
         const distance = incidentLatLng.distanceTo(unitLatLng);
-        
         if (distance < minDistance) {
           minDistance = distance;
           closestUnit = unit;
@@ -33,6 +32,11 @@ export default function DispatchModal({ incident, availableUnits, onDispatch, on
     }
   }, [incident, availableUnits]);
 
+  // Inicializa la selección solo al abrir el modal (cuando cambia el incidente)
+  useEffect(() => {
+    setSelectedUnitIds(recommendedUnitIds);
+  }, [incident]);
+
   const handleUnitSelection = (unitId) => {
     setSelectedUnitIds(prev =>
       prev.includes(unitId)
@@ -43,8 +47,12 @@ export default function DispatchModal({ incident, availableUnits, onDispatch, on
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!preaviso.trim()) {
+      alert('Debes escribir el mensaje 0-4 (preaviso) antes de despachar.');
+      return;
+    }
     if (selectedUnitIds.length > 0 && selectedClassification) {
-      onDispatch(incident.id, selectedClassification, selectedUnitIds);
+      onDispatch(incident.id, selectedClassification, selectedUnitIds, preaviso);
       onClose();
     } else {
       alert('Please select a classification and at least one unit.');
@@ -72,6 +80,18 @@ export default function DispatchModal({ incident, availableUnits, onDispatch, on
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
+            <label htmlFor="preaviso">Mensaje 0-4 (Preaviso):</label>
+            <textarea
+              id="preaviso"
+              value={preaviso}
+              onChange={e => setPreaviso(e.target.value)}
+              required
+              rows={2}
+              placeholder="Ejemplo: 0-4 Preaviso para emergencia en ..."
+              style={{ width: '100%', fontFamily: 'Roboto Mono, monospace', fontSize: '13px' }}
+            />
+          </div>
+          <div className="form-group">
             <label htmlFor="classification">Classification:</label>
             <select
               id="classification"
@@ -89,9 +109,14 @@ export default function DispatchModal({ incident, availableUnits, onDispatch, on
           <div className="form-group">
             <label>Available Units:</label>
             {/* --- NEW UI ELEMENT: The suggestion box --- */}
+            {recommendedUnitIds.length > 0 && (
+              <div className="suggestion-box">
+                <strong>Recommended Units:</strong> {recommendedUnitIds.join(', ')}
+              </div>
+            )}
             {nearestUnitId && (
               <div className="suggestion-box">
-                Suggested Unit (Nearest): <strong>{nearestUnitId}</strong>
+                Nearest Unit: <strong>{nearestUnitId}</strong>
               </div>
             )}
             <div className="unit-selection-list">

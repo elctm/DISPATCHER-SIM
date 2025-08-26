@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -59,6 +59,11 @@ export default function Map({ units, stations, incidents, setMapInstance }) {
           icon={getUnitIcon(unit.type)}
         >
           <Popup>Unit: {unit.id} - Status: {unit.status}</Popup>
+          <Tooltip direction="bottom" offset={[0, 12]} permanent>
+            <span style={{ fontWeight: 'bold', color: '#facc15', background: '#374151', padding: '1px 5px', borderRadius: '4px', fontFamily: 'Roboto Mono, monospace', fontSize: '11px' }}>
+              {unit.id}
+            </span>
+          </Tooltip>
         </Marker>
       ))}
       {incidents.map(incident => (

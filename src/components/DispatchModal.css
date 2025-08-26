@@ -39,7 +39,11 @@ select, input {
   border-radius: 4px;
   border: 1px solid #7f8c8d;
   background-color: #2c50;
-  color: white;
+  color: #111;
+}
+option {
+  color: #111 !important;
+  background: #fff;
 }
 .unit-selection-list {
   display: flex;
